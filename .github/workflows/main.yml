@@ -79,5 +79,6 @@ jobs:
         # 提交更改 (如果没有任何更改，则不报错并继续)
         git commit -m "Update rules from input.txt and convert to MRS" || echo "No changes to commit"
         
-        # 推送到指定分支
-        git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/amskdaj111/yaml_to_mrs.git HEAD:rules-output
+        # ⬅️ 关键修改在这里：添加 --force 参数
+        # 推送到指定分支，并强制覆盖
+        git push --force https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/amskdaj111/yaml_to_mrs.git HEAD:rules-output
