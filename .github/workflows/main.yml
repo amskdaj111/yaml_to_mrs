@@ -40,4 +40,5 @@ jobs:
         git config core.autocrlf false
         git add proxy.yaml proxy.mrs direct.yaml direct.mrs
         git commit -m "Update YAML rules and convert to MRS" || echo "No changes to commit"
-        git push -u origin HEAD:rules-output
+        git push https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/amskdaj111/yaml_to_mrs.git HEAD:rules-output
+    
