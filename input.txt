@@ -1,0 +1,5 @@
+https://gcore.jsdelivr.net/gh/TG-Twilight/AWAvenue-Ads-Rule@main/Filters/AWAvenue-Ads-Rule-Clash.yaml
+https://gcore.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/proxy.txt
+https://gcore.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/direct.txt
+https://gcore.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/private.txt
+https://gcore.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/google.txt
