@@ -10,39 +10,74 @@ jobs:
   convert:
     runs-on: windows-latest
 
-    # ⬅️ 第 1 步：在这里添加权限声明
     permissions:
       contents: write
 
     steps:
-    # 1️⃣ 获取仓库代码
+    # 1️⃣ 获取仓库代码 (包括 input.txt)
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    # 2️⃣ 下载 Mihomo 内核
+    # 2️⃣ 下载 Mihomo 内核 (不变)
     - name: Download Mihomo
       run: |
         curl -L -o mihomo.exe https://github.com/amskdaj111/rules/releases/download/mihomo/mihomo.exe
 
-    # 3️⃣ 下载 YAML 规则集
-    - name: Download YAML rules
+    # 3️⃣-5️⃣ (合并) 下载、转换、整理并提交
+    - name: Process rules, commit and push
       run: |
-        curl -L -o proxy.yaml https://gcore.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/proxy.txt
-        curl -L -o direct.yaml https://gcore.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/direct.txt
+        # 创建输出目录
+        mkdir yaml, mrs
 
-    # 4️⃣ 转换 YAML 为 MRS
-    - name: Convert YAML to MRS
-      run: |
-        .\mihomo.exe convert-ruleset domain yaml proxy.yaml proxy.mrs
-        .\mihomo.exe convert-ruleset domain yaml direct.yaml direct.mrs
+        # 检查 input.txt 是否存在
+        if (-not (Test-Path -Path "input.txt")) {
+          echo "input.txt not found!"
+          exit 1
+        }
 
-    # 5️⃣ 提交并推送到非保护分支 rules-output
-    - name: Commit and push updated rules
-      run: |
+        # 读取 input.txt 并逐行处理
+        Get-Content input.txt | ForEach-Object {
+          $url = $_
+          if ($url) {
+            # 从 URL 中提取最后的文件名 (例如 proxy.txt)
+            $baseNameWithExt = $url.Split('/')[-1]
+            # 去掉扩展名，得到前缀 (例如 proxy)
+            $prefix = $baseNameWithExt.Split('.')[0]
+            
+            # 定义新的文件名
+            $yamlFile = "$prefix.yaml"
+            $mrsFile = "$prefix.mrs"
+            
+            echo "Processing URL: $url"
+            echo "-> Downloading to $yamlFile"
+            
+            # 下载文件
+            curl -L -o $yamlFile $url
+            
+            echo "-> Converting $yamlFile to $mrsFile"
+            
+            # 转换文件
+            .\mihomo.exe convert-ruleset domain yaml $yamlFile $mrsFile
+            
+            # 移动文件到对应目录
+            Move-Item -Path $yamlFile -Destination "yaml\"
+            Move-Item -Path $mrsFile -Destination "mrs\"
+            
+            echo "-> Done for $prefix"
+            echo "---------------------"
+          }
+        }
+        
+        # 配置 Git
         git config user.name "github-actions[bot]"
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
         git config core.autocrlf false
-        git add proxy.yaml proxy.mrs direct.yaml direct.mrs
-        git commit -m "Update YAML rules and convert to MRS" || echo "No changes to commit"
-        # ⬅️ 第 2 步：修改这里的 Token
+        
+        # 添加所有新生成的文件
+        git add yaml mrs
+        
+        # 提交更改 (如果没有任何更改，则不报错并继续)
+        git commit -m "Update rules from input.txt and convert to MRS" || echo "No changes to commit"
+        
+        # 推送到指定分支
         git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/amskdaj111/yaml_to_mrs.git HEAD:rules-output
