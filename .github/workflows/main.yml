@@ -1,0 +1,37 @@
+name: Convert Clash Rules to MRS
+
+on:
+  schedule:
+    # UTC 时间 19:00 = 北京时间 03:00
+    - cron: '0 19 * * *'
+  workflow_dispatch:   # 手动触发
+
+jobs:
+  convert:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Download Mihomo
+      run: |
+        curl -L -o mihomo.exe https://github.com/amskdaj111/rules/releases/download/mihomo/mihomo.exe
+
+    - name: Download YAML rules
+      run: |
+        curl -L -o proxy.yaml https://gcore.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/proxy.txt
+        curl -L -o direct.yaml https://gcore.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/direct.txt
+
+    - name: Convert YAML to MRS
+      run: |
+        .\mihomo.exe convert-ruleset domain yaml proxy.yaml proxy.mrs
+        .\mihomo.exe convert-ruleset domain yaml direct.yaml direct.mrs
+
+    - name: Commit and push updated rules
+      run: |
+        git config user.name "github-actions"
+        git config user.email "actions@github.com"
+        git add proxy.yaml proxy.mrs direct.yaml direct.mrs
+        git commit -m "Update YAML rules and convert to MRS" || echo "No changes to commit"
+        git push
