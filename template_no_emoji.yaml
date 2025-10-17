@@ -1,0 +1,253 @@
+mixed-port: 7890
+allow-lan: false
+bind-address: 0.0.0.0
+mode: rule
+log-level: silent
+ipv6: true
+unified-delay: true
+
+
+dns:
+  enable: true
+  ipv6: true
+  enhanced-mode: fake-ip
+  fake-ip-filter:
+    - 'rule-set:private'
+    - 'rule-set:direct'
+    - '*.lan'
+    - '*.local'
+    - '*.localhost'
+    - '+.msftconnecttest.com'
+    - '+.localdomain'
+  default-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+  nameserver:
+    - https://doh.pub/dns-query
+    - https://dns.alidns.com/dns-query
+  nameserver-policy:
+    '+.edu.cn': system
+    '+.msftconnecttest.com': system
+    'rule-set:private': system
+
+# ============= 节点订阅 =============
+# 如果在同一设备使用多个yaml文件，请将path路径改为不同文件
+proxy-providers:
+  airport:
+    type: http
+    url: "订阅链接"
+    interval: 10800
+    path: ./proxy_providers/airport.yaml
+    health-check:
+      enable: true
+      url: https://cp.cloudflare.com/generate_204
+      interval: 600
+    header:
+     User-Agent:
+      - "Clash-Verge/v2.4.2"
+     
+# ============= 策略组 =============
+proxy-groups:
+  - name:  泛用代理
+    type: select
+    proxies:
+      - 🇭🇰 香港节点
+      - 🇨🇳 台湾节点
+      - 🇸🇬 狮城节点
+      - 🇯🇵 日本节点
+      - 🇺🇲 美国节点
+      - 🇪🇺 欧澳节点
+      - DIRECT
+
+  - name:  电报消息
+    type: select
+    proxies:
+      - 🇸🇬 狮城节点
+      - 🇭🇰 香港节点
+      - 🇨🇳 台湾节点
+      - 🇯🇵 日本节点
+      - 🇺🇲 美国节点
+      - 🇪🇺 欧澳节点
+      - DIRECT
+
+  - name:  灵智天衍
+    type: select
+    proxies:
+      - 🇸🇬 狮城节点
+      - 🇨🇳 台湾节点
+      - 🇯🇵 日本节点
+      - 🇺🇲 美国节点
+      - 🇪🇺 欧澳节点
+      - DIRECT
+
+  - name:  油管视频
+    type: select
+    proxies:
+      - 🇸🇬 狮城节点
+      - 🇭🇰 香港节点
+      - 🇨🇳 台湾节点
+      - 🇯🇵 日本节点
+      - 🇺🇲 美国节点
+      - 🇪🇺 欧澳节点
+      - DIRECT
+
+  - name:  全球学术
+    type: select
+    proxies:
+      - DIRECT
+      - 🇸🇬 狮城节点
+      - 🇭🇰 香港节点
+      - 🇨🇳 台湾节点
+      - 🇯🇵 日本节点
+      - 🇺🇲 美国节点
+      - 🇪🇺 欧澳节点
+
+  - name:  广告拦截
+    type: select
+    proxies:
+      - REJECT
+      - DIRECT
+
+
+  - name:  漏网之鱼
+    type: select
+    proxies:
+      - 🇭🇰 香港节点
+      - 🇨🇳 台湾节点
+      - 🇸🇬 狮城节点
+      - 🇯🇵 日本节点
+      - 🇺🇲 美国节点
+      - 🇪🇺 欧澳节点
+      - DIRECT
+
+  - name: 🇭🇰 香港节点
+    type: url-test
+    use:
+      - airport
+    filter: "(港|HK|hk|Hong Kong|HongKong|hongkong)"
+    url: https://cp.cloudflare.com/generate_204
+    interval: 300
+    tolerance: 50
+
+  - name: 🇯🇵 日本节点
+    type: select
+    use:
+      - airport
+    filter: "(日本|川日|东京|大阪|泉日|埼玉|沪日|深日|JP|Japan)"
+
+  - name: 🇺🇲 美国节点
+    type: url-test
+    use:
+      - airport
+    filter: "(美|波特兰|达拉斯|俄勒冈|凤凰城|费利蒙|硅谷|拉斯维加斯|洛杉矶|圣何塞|圣克拉拉|西雅图|芝加哥|US|United States)"
+    url: https://cp.cloudflare.com/generate_204
+    interval: 300
+    tolerance: 150
+
+  - name: 🇨🇳 台湾节点
+    type: select
+    use:
+      - airport
+    filter: "(台|新北|彰化|TW|Taiwan)"
+
+
+  - name: 🇸🇬 狮城节点
+    type: url-test
+    use:
+      - airport
+    filter: "(新加坡|坡|狮城|SG|Singapore)"
+    url: https://cp.cloudflare.com/generate_204
+    interval: 300
+    tolerance: 50
+
+  - name: 🇪🇺 欧澳节点
+    type: select
+    use:
+     - airport
+    filter: "(欧洲|EU|Europa|英国|UK|UnitedKingdom|伦敦|London|德国|DE|Deutschland|柏林|Berlin|法兰克福|Frankfurt|俄罗斯|RU|Russia|莫斯科|Moscow|荷兰|NL|Netherlands|阿姆斯特丹|Amsterdam|澳洲|Australia|AU|悉尼|Sydney|墨尔本|Melbourne)"
+
+# ============= 规则集 =============
+
+rule-providers:  
+  banad:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://gcore.jsdelivr.net/gh/amskdaj111/yaml_to_mrs@rules-output/mrs/AWAvenue-Ads-Rule-Clash.mrs"
+    path: ./rule_providers/banad.mrs
+    interval: 86400
+  proxy:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://gcore.jsdelivr.net/gh/amskdaj111/yaml_to_mrs@rules-output/mrs/proxy.mrs"
+    path: ./rule_providers/gfw.mrs
+    interval: 86400
+  direct:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://gcore.jsdelivr.net/gh/amskdaj111/yaml_to_mrs@rules-output/mrs/direct.mrs"
+    path: ./rule_providers/direct.mrs
+    interval: 86400
+  private:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://gcore.jsdelivr.net/gh/amskdaj111/yaml_to_mrs@rules-output/mrs/private.mrs"
+    path: ./rule_providers/private.mrs
+    interval: 86400
+  googlecn:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://gcore.jsdelivr.net/gh/amskdaj111/yaml_to_mrs@rules-output/mrs/google.mrs"
+    path: ./rule_providers/googlecn.mrs
+    interval: 86400
+  scholar:
+    type: http
+    behavior: classical
+    url: "https://gcore.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Providers/Ruleset/Scholar.yaml"
+    path: ./rule_providers/scholar.yaml
+    interval: 86400
+  youtube:
+    type: http
+    behavior: classical
+    url: "https://gcore.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Providers/Ruleset/YouTube.yaml"
+    path: ./rule_providers/youtube.yaml
+    interval: 86400
+  telegram:
+    type: http
+    behavior: classical
+    url: "https://gcore.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Providers/Ruleset/Telegram.yaml"
+    path: ./rule_providers/telegram.yaml
+    interval: 86400
+  ai:
+    type: http
+    behavior: classical
+    url: "https://gcore.jsdelivr.net/gh/amskdaj111/rules/AI.yaml"
+    path: ./rule_providers/ai.yaml
+    interval: 86400
+  sogouinput:
+    type: http
+    behavior: classical
+    format: text
+    url: "https://gcore.jsdelivr.net/gh/SukkaLab/ruleset.skk.moe@refs/heads/master/Clash/non_ip/sogouinput.txt"
+    path: ./rule_providers/sogouinput.yaml
+    interval: 86400
+
+rules:
+  - DOMAIN-SUFFIX,msftconnecttest.com,DIRECT
+  - RULE-SET,private,DIRECT
+  - RULE-SET,banad, 广告拦截
+  - RULE-SET,sogouinput,REJECT
+  - RULE-SET,scholar, 全球学术
+  - RULE-SET,youtube, 油管视频
+  - RULE-SET,telegram, 电报消息
+  - RULE-SET,ai, 灵智天衍
+  - RULE-SET,proxy, 泛用代理
+  - RULE-SET,googlecn, 泛用代理
+  - RULE-SET,direct,DIRECT
+  - MATCH, 漏网之鱼
+
+
