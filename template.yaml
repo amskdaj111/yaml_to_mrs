@@ -13,6 +13,7 @@ dns:
   enhanced-mode: fake-ip
   fake-ip-filter:
     - 'rule-set:private'
+    - 'rule-set:ntp'
     - '+.msftconnecttest.com'
   default-nameserver:
     - 223.5.5.5
@@ -24,22 +25,20 @@ dns:
     '+.edu.cn': system
     '+.msftconnecttest.com': system
     'rule-set:private': system
+    'rule-set:ntp': system
 
 
 proxy-providers:
   airport:
     type: http
-    url: "订阅链接"
+    url: "subscription url"
     interval: 10800
     path: ./proxy_providers/airport.yaml
     health-check:
       enable: true
       url: https://cp.cloudflare.com/generate_204
       interval: 600
-    header:
-     User-Agent:
-      - "Clash-Verge/v2.4.2"
-     
+
 
 proxy-groups:
   - name:  泛用代理
@@ -68,7 +67,7 @@ proxy-groups:
     type: select
     use:
       - airport
-    filter: "(新加坡|坡|狮城|SG|Singapore)"
+    filter: "(新加坡|坡|狮城|SG|Singapore|美|US)"
     url: https://cp.cloudflare.com/generate_204
     interval: 600
 
@@ -131,7 +130,7 @@ proxy-groups:
     type: url-test
     use:
       - airport
-    filter: "^(?!.*(free|\\(0\\.3x\\)|\\(0\\.1x\\))).*(美|波特兰|达拉斯|俄勒冈|凤凰城|费利蒙|硅谷|拉斯维加斯|洛杉矶|圣何塞|圣克拉拉|西雅图|芝加哥|US|United States)"
+    filter: "(美|波特兰|达拉斯|俄勒冈|凤凰城|费利蒙|硅谷|拉斯维加斯|洛杉矶|圣何塞|圣克拉拉|西雅图|芝加哥|US|United States)"
     url: https://cp.cloudflare.com/generate_204
     interval: 300
     tolerance: 150
@@ -227,10 +226,18 @@ rule-providers:
     url: "https://gcore.jsdelivr.net/gh/SukkaLab/ruleset.skk.moe@refs/heads/master/Clash/non_ip/sogouinput.txt"
     path: ./rule_providers/sogouinput.yaml
     interval: 86400
+  ntp:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://gcore.jsdelivr.net/gh/amskdaj111/yaml_to_mrs@rules-output/mrs/ntp.mrs"
+    path: ./rule_providers/ntp.mrs
+    interval: 86400
 
 rules:
   - DOMAIN-SUFFIX,msftconnecttest.com,DIRECT
   - RULE-SET,private,DIRECT
+  - RULE-SET,ntp,DIRECT
   - RULE-SET,banad, 广告拦截
   - RULE-SET,sogouinput,REJECT
   - RULE-SET,scholar, 全球学术
