@@ -63,7 +63,7 @@ proxy-groups:
       - 🇪🇺 欧澳节点
       - DIRECT
 
-  - name: 🤖 灵智天衍
+  - name: 🤖 AI平台
     type: select
     use:
       - airport
@@ -240,7 +240,7 @@ rules:
   - RULE-SET,scholar, 🎓 全球学术
   - RULE-SET,youtube, ▶️ 油管视频
   - RULE-SET,telegram, ✈️ 电报消息
-  - RULE-SET,ai, 🤖 灵智天衍
+  - RULE-SET,ai, 🤖 AI平台
   - RULE-SET,proxy, 🌍 泛用代理
   - RULE-SET,googlecn, 🌍 泛用代理
   - RULE-SET,direct,DIRECT
