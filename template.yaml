@@ -41,7 +41,7 @@ proxy-providers:
 
 
 proxy-groups:
-  - name:  泛用代理
+  - name: 🌍 泛用代理
     type: select
     proxies:
       - 🇭🇰 香港节点
@@ -52,7 +52,7 @@ proxy-groups:
       - 🇪🇺 欧澳节点
       - DIRECT
 
-  - name:  电报消息
+  - name: ✈️ 电报消息
     type: select
     proxies:
       - 🇸🇬 狮城节点
@@ -63,15 +63,14 @@ proxy-groups:
       - 🇪🇺 欧澳节点
       - DIRECT
 
-  - name:  灵智天衍
+  - name: 🤖 灵智天衍
     type: select
     use:
       - airport
     filter: "(新加坡|坡|狮城|SG|Singapore|美|US)"
-    url: https://cp.cloudflare.com/generate_204
-    interval: 600
 
-  - name:  油管视频
+
+  - name: ▶️ 油管视频
     type: select
     proxies:
       - 🇸🇬 狮城节点
@@ -82,7 +81,7 @@ proxy-groups:
       - 🇪🇺 欧澳节点
       - DIRECT
 
-  - name:  全球学术
+  - name: 🎓 全球学术
     type: select
     proxies:
       - DIRECT
@@ -93,14 +92,14 @@ proxy-groups:
       - 🇺🇲 美国节点
       - 🇪🇺 欧澳节点
 
-  - name:  广告拦截
+  - name: 🛑 广告拦截
     type: select
     proxies:
       - REJECT
       - DIRECT
 
 
-  - name:  漏网之鱼
+  - name: 🐟 漏网之鱼
     type: select
     proxies:
       - 🇭🇰 香港节点
@@ -112,13 +111,12 @@ proxy-groups:
       - DIRECT
 
   - name: 🇭🇰 香港节点
-    type: url-test
+    type: fallback
     use:
       - airport
     filter: "(港|HK|hk|Hong Kong|HongKong|hongkong)"
     url: https://cp.cloudflare.com/generate_204
-    interval: 300
-    tolerance: 50
+
 
   - name: 🇯🇵 日本节点
     type: select
@@ -127,13 +125,12 @@ proxy-groups:
     filter: "(日本|川日|东京|大阪|泉日|埼玉|沪日|深日|JP|Japan)"
 
   - name: 🇺🇲 美国节点
-    type: url-test
+    type: fallback
     use:
       - airport
     filter: "(美|波特兰|达拉斯|俄勒冈|凤凰城|费利蒙|硅谷|拉斯维加斯|洛杉矶|圣何塞|圣克拉拉|西雅图|芝加哥|US|United States)"
     url: https://cp.cloudflare.com/generate_204
-    interval: 300
-    tolerance: 150
+
 
 
   - name: 🇨🇳 台湾节点
@@ -144,12 +141,12 @@ proxy-groups:
 
 
   - name: 🇸🇬 狮城节点
-    type: url-test
+    type: fallback
     use:
       - airport
     filter: "(新加坡|坡|狮城|SG|Singapore)"
     url: https://cp.cloudflare.com/generate_204
-    interval: 600
+
 
   - name: 🇪🇺 欧澳节点
     type: select
@@ -159,7 +156,7 @@ proxy-groups:
 
 
 
-rule-providers:  
+rule-providers:
   banad:
     type: http
     behavior: domain
@@ -238,14 +235,13 @@ rules:
   - DOMAIN-SUFFIX,msftconnecttest.com,DIRECT
   - RULE-SET,private,DIRECT
   - RULE-SET,ntp,DIRECT
-  - RULE-SET,banad, 广告拦截
+  - RULE-SET,banad, 🛑 广告拦截
   - RULE-SET,sogouinput,REJECT
-  - RULE-SET,scholar, 全球学术
-  - RULE-SET,youtube, 油管视频
-  - RULE-SET,telegram, 电报消息
-  - RULE-SET,ai, 灵智天衍
-  - RULE-SET,proxy, 泛用代理
-  - RULE-SET,googlecn, 泛用代理
+  - RULE-SET,scholar, 🎓 全球学术
+  - RULE-SET,youtube, ▶️ 油管视频
+  - RULE-SET,telegram, ✈️ 电报消息
+  - RULE-SET,ai, 🤖 灵智天衍
+  - RULE-SET,proxy, 🌍 泛用代理
+  - RULE-SET,googlecn, 🌍 泛用代理
   - RULE-SET,direct,DIRECT
-  - MATCH, 漏网之鱼
-
+  - MATCH, 🐟 漏网之鱼
