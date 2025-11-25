@@ -31,7 +31,7 @@ dns:
 proxy-providers:
   airport:
     type: http
-    url: "subscription url"
+    url: "subscription_url"
     interval: 10800
     path: ./proxy_providers/airport.yaml
     health-check:
