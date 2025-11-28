@@ -49,7 +49,7 @@ proxy-groups:
       - 🇸🇬 狮城节点
       - 🇯🇵 日本节点
       - 🇺🇲 美国节点
-      - 🇪🇺 欧澳节点
+      - 🏳️ 其他节点
       - DIRECT
 
   - name: ✈️ 电报消息
@@ -60,7 +60,7 @@ proxy-groups:
       - 🇨🇳 台湾节点
       - 🇯🇵 日本节点
       - 🇺🇲 美国节点
-      - 🇪🇺 欧澳节点
+      - 🏳️ 其他节点
       - DIRECT
 
   - name: 🤖 AI平台
@@ -78,7 +78,7 @@ proxy-groups:
       - 🇨🇳 台湾节点
       - 🇯🇵 日本节点
       - 🇺🇲 美国节点
-      - 🇪🇺 欧澳节点
+      - 🏳️ 其他节点
       - DIRECT
 
   - name: 🎓 全球学术
@@ -90,7 +90,7 @@ proxy-groups:
       - 🇨🇳 台湾节点
       - 🇯🇵 日本节点
       - 🇺🇲 美国节点
-      - 🇪🇺 欧澳节点
+      - 🏳️ 其他节点
 
   - name: 🛑 广告拦截
     type: select
@@ -107,7 +107,7 @@ proxy-groups:
       - 🇸🇬 狮城节点
       - 🇯🇵 日本节点
       - 🇺🇲 美国节点
-      - 🇪🇺 欧澳节点
+      - 🏳️ 其他节点
       - DIRECT
 
   - name: 🇭🇰 香港节点
@@ -148,11 +148,12 @@ proxy-groups:
     url: https://cp.cloudflare.com/generate_204
 
 
-  - name: 🇪🇺 欧澳节点
+  - name: 🏳️ 其他节点
     type: select
     use:
      - airport
-    filter: "(欧洲|EU|Europa|英国|UK|UnitedKingdom|伦敦|London|德国|DE|Deutschland|柏林|Berlin|法兰克福|Frankfurt|俄罗斯|RU|Russia|莫斯科|Moscow|荷兰|NL|Netherlands|阿姆斯特丹|Amsterdam|澳洲|Australia|AU|悉尼|Sydney|墨尔本|Melbourne)"
+    filter: "^(?!.*(港|HK|hk|Hong Kong|HongKong|hongkong|日本|川日|东京|大阪|泉日|埼玉|沪日|深日|JP|Japan|美|波特兰|达拉斯|俄勒冈|凤凰城|费利蒙|硅谷|拉斯维加斯|洛杉矶|圣何塞|圣克拉拉|西雅图|芝加哥|US|United States|台|新北|彰化|TW|Taiwan|新加坡|坡|狮城|SG|Singapore)).*"
+
 
 
 
