@@ -1,4 +1,4 @@
-name: Convert Clash Rules to MRS
+name: Build and Release Clash Rules
 
 on:
   workflow_dispatch:
@@ -6,21 +6,31 @@ on:
     - cron: '0 19 * * *'
 
 jobs:
-  convert:
+  build-and-release:
     runs-on: windows-latest
     permissions:
       contents: write
 
     steps:
+    # 步骤 1: 检出 main 分支的代码以获取 input.txt
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Download Mihomo converter
-      run: curl -L -o mihomo.exe https://github.com/amskdaj111/rules/releases/download/mihomo/mihomo.exe
-
-    - name: Process rule files
+    # 步骤 2: 基于当前时间生成一个唯一的、有序的Tag名称
+    - name: Generate release tag
+      id: tagger
       run: |
-        # 省略了和之前一样的文件处理部分...
+        # 格式: rules-YYYY-MM-DD-HH-mm-ss
+        $tagName = "rules-$(Get-Date -Format 'yyyy-MM-dd-HH-mm-ss')"
+        echo "Generated tag: $tagName"
+        # 将变量输出到GitHub的环境中，供后续步骤使用
+        echo "RELEASE_TAG=$tagName" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      shell: pwsh
+
+    # 步骤 3: 下载转换器并生成规则文件
+    - name: Download and process rules
+      run: |
+        curl -L -o mihomo.exe https://github.com/amskdaj111/rules/releases/download/mihomo/mihomo.exe
         Remove-Item -Recurse -Force yaml, mrs -ErrorAction SilentlyContinue
         mkdir yaml, mrs
         if (-not (Test-Path -Path "input.txt")) {
@@ -41,31 +51,33 @@ jobs:
           }
         }
 
-    - name: Force push to rules-output branch
-      run: |
-        # 1. 配置 Git 用户和行为
-        git config user.name "github-actions[bot]"
-        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-        git config --global core.autocrlf false
-        
-        # 2. 切换到一个全新的、无历史记录的孤儿分支
-        git checkout --orphan temp-branch
-        
-        # 3. 清理工作区，除了我们需要的 yaml 和 mrs
-        #    (git add 会把它们加回来)
-        git rm -rf .
-        
-        # 4. 强制添加 yaml 和 mrs 目录
-        git add yaml mrs -f
-        
-        # 5. 创建一个 commit
-        $timestamp = (Get-Date).ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss 'UTC'")
-        git commit -m "chore: Scheduled rules update ($timestamp)"
-        
-        # 6. 将当前分支重命名为目标分支名
-        git branch -M temp-branch rules-output
-        
-        # 7. 强制推送到远程的 rules-output 分支
-        #    -f 确保了无论远程分支是否存在或有何不同，都会被本次提交覆盖
-        git push -f origin rules-output
-      shell: pwsh
+    # 步骤 4: 创建Release并上传所有独立的规则文件
+    - name: Create GitHub Release and upload assets
+      uses: softprops/action-gh-release@v2
+      with:
+        # 使用我们之前生成的唯一的、带时间戳的Tag
+        tag_name: ${{ env.RELEASE_TAG }}
+        # Release的标题
+        name: "Rules Update ${{ env.RELEASE_TAG }}"
+        # 更新了Release的正文内容，以反映文件是独立上传的
+        body: |
+          Automated rule files update.
+          All generated `.yaml` and `.mrs` files are attached as individual assets.
+        # 核心改动：使用通配符匹配所有要上传的文件
+        files: |
+          yaml/*
+          mrs/*```
+
+### 核心改动解析
+
+1.  **移除了打包步骤**:
+    之前的 `Package artifacts` 步骤已经被完全删除，我们不再需要创建 `.zip` 文件。
+
+2.  **更新了 `Create GitHub Release` 步骤**:
+    这是最重要的变化。
+    ```yaml
+        # ... (其他参数)
+        # 核心改动：使用通配符匹配所有要上传的文件
+        files: |
+          yaml/*
+          mrs/*
