@@ -20,6 +20,8 @@ jobs:
 
     - name: Process rule files
       run: |
+        # 为确保每次运行都是干净的，先删除旧目录
+        Remove-Item -Recurse -Force yaml, mrs -ErrorAction SilentlyContinue
         mkdir yaml, mrs
 
         if (-not (Test-Path -Path "input.txt")) {
@@ -47,14 +49,17 @@ jobs:
           }
         }
 
+    # 💡 关键修正: 在提交前，将生成的文件添加到暂存区
+    - name: Stage generated files
+      run: git add yaml mrs
+
     - name: Commit files to rules-output branch
       uses: stefanzweifel/git-auto-commit-action@v5
       with:
         commit_message: "chore: Update rule files"
         branch: rules-output
+        # 注意：因为上一步已经 add，这里的 file_pattern 变得不那么关键，但保留也无妨
         file_pattern: yaml mrs
         repository: .
         commit_user_name: github-actions[bot]
         commit_user_email: 41898282+github-actions[bot]@users.noreply.github.com
-        # 该选项确保目标分支的内容与生成文件同步，并创建新 commit
-        push_options: --force
