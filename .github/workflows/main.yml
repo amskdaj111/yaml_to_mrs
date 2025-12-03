@@ -23,10 +23,21 @@ jobs:
         # 拉取所有提交历史，以便后续步骤能从其他分支获取文件
         fetch-depth: 0 
 
-    # 步骤 2: 从主分支获取最新的规则源列表
-    - name: Get input.txt from main branch
-      run: git show main:input.txt > input.txt
-      # 注: 如果你的主分支名为 master, 请将 'main' 修改为 'master'
+    # 步骤 2: 从仓库的默认分支获取最新的规则源列表
+    - name: Get input.txt from default branch
+      shell: pwsh
+      run: |
+        # 💡 关键修正：动态检测仓库的默认分支名 (main, master, etc.)
+        $defaultBranch = (git remote show origin | Select-String -Pattern "HEAD branch").ToString().Split(':')[-1].Trim()
+        
+        if (-not $defaultBranch) {
+          echo "Could not determine the default branch."
+          exit 1
+        }
+        
+        echo "Default branch detected as: $defaultBranch"
+        git show "${defaultBranch}:input.txt" > input.txt
+        echo "Successfully fetched input.txt from the default branch."
 
     # 步骤 3: 下载规则转换工具 Mihomo
     - name: Download Mihomo
