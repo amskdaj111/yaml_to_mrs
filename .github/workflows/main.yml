@@ -20,6 +20,7 @@ jobs:
 
     - name: Process rule files
       run: |
+        # 省略了和之前一样的文件处理部分...
         Remove-Item -Recurse -Force yaml, mrs -ErrorAction SilentlyContinue
         mkdir yaml, mrs
         if (-not (Test-Path -Path "input.txt")) {
@@ -40,34 +41,31 @@ jobs:
           }
         }
 
-    # 最终方案：精确添加指定目录，并使用 Stash 安全切换分支
-    - name: Commit and Push to rules-output branch
+    - name: Force push to rules-output branch
       run: |
-        # 1. 配置 Git 用户
+        # 1. 配置 Git 用户和行为
         git config user.name "github-actions[bot]"
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config --global core.autocrlf false
         
-        # 2. 核心改动：只添加 'yaml' 和 'mrs' 目录
-        #    使用 -f (force) 参数可以无视 .gitignore 文件，确保它们一定被添加
+        # 2. 切换到一个全新的、无历史记录的孤儿分支
+        git checkout --orphan temp-branch
+        
+        # 3. 清理工作区，除了我们需要的 yaml 和 mrs
+        #    (git add 会把它们加回来)
+        git rm -rf .
+        
+        # 4. 强制添加 yaml 和 mrs 目录
         git add yaml mrs -f
         
-        # 3. 将这些改动（包括新文件）暂存起来，让工作区变干净
-        git stash push --include-untracked
-        
-        # 4. 安全地切换到目标分支
-        #    如果本地没有，会基于远程 origin/rules-output 创建
-        git checkout rules-output
-        
-        # 5. 在新分支上，恢复刚才暂存的内容
-        git stash pop
-        
-        # 6. 再次添加，确保恢复后的文件进入暂存区
-        git add yaml mrs -f
-        
-        # 7. 强制创建 commit，无论内容是否真有变化
+        # 5. 创建一个 commit
         $timestamp = (Get-Date).ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss 'UTC'")
-        git commit --allow-empty -m "chore: Scheduled rules update ($timestamp)"
+        git commit -m "chore: Scheduled rules update ($timestamp)"
         
-        # 8. 推送到远程
-        git push origin rules-output
+        # 6. 将当前分支重命名为目标分支名
+        git branch -M temp-branch rules-output
+        
+        # 7. 强制推送到远程的 rules-output 分支
+        #    -f 确保了无论远程分支是否存在或有何不同，都会被本次提交覆盖
+        git push -f origin rules-output
       shell: pwsh
