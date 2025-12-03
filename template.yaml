@@ -5,6 +5,7 @@ dns:
   fake-ip-filter:
     - 'rule-set:private'
     - 'rule-set:ntp'
+    - 'rule-set:direct'
     - '+.msftconnecttest.com'
   default-nameserver:
     - 223.5.5.5
@@ -64,11 +65,11 @@ proxy-groups:
   - name: ▶️ 油管视频
     type: select
     proxies:
+      - 🇺🇲 美国节点
       - 🇸🇬 狮城节点
       - 🇭🇰 香港节点
       - 🇨🇳 台湾节点
       - 🇯🇵 日本节点
-      - 🇺🇲 美国节点
       - 🏳️ 其他节点
       - DIRECT
 
