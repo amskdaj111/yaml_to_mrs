@@ -8,55 +8,70 @@ on:
 jobs:
   convert:
     runs-on: windows-latest
-
     permissions:
       contents: write
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
-    - name: Download Mihomo
-      run: |
-        curl -L -o mihomo.exe https://github.com/amskdaj111/rules/releases/download/mihomo/mihomo.exe
+    - name: Download Mihomo converter
+      run: curl -L -o mihomo.exe https://github.com/amskdaj111/rules/releases/download/mihomo/mihomo.exe
 
-    - name: Process rules, commit and push
+    - name: Process rule files
       run: |
+        # 确保每次运行都是干净的
+        Remove-Item -Recurse -Force yaml, mrs -ErrorAction SilentlyContinue
         mkdir yaml, mrs
 
         if (-not (Test-Path -Path "input.txt")) {
           echo "input.txt not found!"
           exit 1
         }
-
+        
+        # 文件处理逻辑 (保持不变)
         Get-Content input.txt | ForEach-Object {
-          $url = $_
+          $url = $_.Trim()
           if ($url) {
             $baseNameWithExt = $url.Split('/')[-1]
             $prefix = $baseNameWithExt.Split('.')[0]
-
             $yamlFile = "$prefix.yaml"
             $mrsFile = "$prefix.mrs"
-
-            echo "Processing URL: $url"
             curl -L -o $yamlFile $url
-
-            .\mihomo.exe convert-ruleset domain yaml $yamlFile $mrsFile
-
-            Move-Item -Path $yamlFile -Destination "yaml\"
-            Move-Item -Path $mrsFile -Destination "mrs\"
+            ./mihomo.exe convert-ruleset domain yaml $yamlFile $mrsFile
+            Move-Item -Path $yamlFile -Destination "yaml/"
+            Move-Item -Path $mrsFile -Destination "mrs/"
           }
         }
 
-        git config user.name "github-actions[bot]"
-        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-        git config core.autocrlf false
+    # 💡 最终方案：强制提交，无论内容是否变化
+    - name: Force Commit and Push to rules-output branch
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        # 1. 配置 Git 用户信息
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-        git add yaml mrs
-        git commit -m "Update rules from input.txt and convert to MRS" || echo "No changes to commit"
+        # 2. 将 'rules-output' 分支克隆到临时目录
+        $cloneDir = "rules-output-temp"
+        git clone --branch rules-output --single-branch https://x-access-token:${{ env.GITHUB_TOKEN }}@github.com/${{ github.repository }} $cloneDir
 
-        # 先获取远端最新内容，避免 push 被拒绝
-        git pull --rebase https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/amskdaj111/yaml_to_mrs.git rules-output
-
-        # 正常推送，保留历史记录
-        git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/amskdaj111/yaml_to_mrs.git HEAD:rules-output
+        # 3. 清理旧文件，移动新文件
+        Remove-Item -Path (Join-Path $cloneDir "*") -Recurse -Force -ErrorAction SilentlyContinue
+        Move-Item -Path "yaml" -Destination $cloneDir
+        Move-Item -Path "mrs" -Destination $cloneDir
+        
+        # 4. 进入临时目录
+        cd $cloneDir
+        
+        # 5. 添加所有文件到暂存区
+        git add .
+        
+        # 6. 核心改动：使用 --allow-empty 强制创建 commit，并加入时间戳保证消息唯一
+        $timestamp = (Get-Date).ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss 'UTC'")
+        git commit --allow-empty -m "chore: Scheduled rules update ($timestamp)"
+        
+        # 7. 推送到远程分支
+        git push
+      shell: pwsh
