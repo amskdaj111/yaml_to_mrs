@@ -1,65 +1,32 @@
 name: Convert Clash Rules to MRS
 
 on:
-  workflow_dispatch:    # 允许手动触发工作流
+  workflow_dispatch:
   schedule:
-    # 定义定时任务: 每日 19:00 UTC (北京时间次日 03:00) 运行
     - cron: '0 19 * * *'
 
 jobs:
   convert:
     runs-on: windows-latest
-
     permissions:
       contents: write
 
     steps:
-    # 步骤 1: 检出用于存放产物的目标分支
-    - name: Checkout target branch
+    - name: Checkout repository
       uses: actions/checkout@v4
-      with:
-        # 指定工作分支为 'rules-output'
-        ref: 'rules-output' 
-        # 拉取所有提交历史，以便后续步骤能从其他分支获取文件
-        fetch-depth: 0 
 
-    # 步骤 2: 从仓库的默认分支获取最新的规则源列表
-    - name: Get input.txt from default branch
-      shell: pwsh
-      run: |
-        # 💡 关键修正：动态检测仓库的默认分支名 (main, master, etc.)
-        $defaultBranch = (git remote show origin | Select-String -Pattern "HEAD branch").ToString().Split(':')[-1].Trim()
-        
-        if (-not $defaultBranch) {
-          echo "Could not determine the default branch."
-          exit 1
-        }
-        
-        echo "Default branch detected as: $defaultBranch"
-        git show "${defaultBranch}:input.txt" > input.txt
-        echo "Successfully fetched input.txt from the default branch."
-
-    # 步骤 3: 下载规则转换工具 Mihomo
-    - name: Download Mihomo
+    - name: Download Mihomo converter
       run: curl -L -o mihomo.exe https://github.com/amskdaj111/rules/releases/download/mihomo/mihomo.exe
 
-    # 步骤 4: 执行规则转换、提交并推送到仓库
-    - name: Process rules, commit and push
+    - name: Process rule files
       run: |
-        # 为保证幂等性，在处理前清理旧的输出目录，防止历史文件残留
-        echo "Cleaning up old rule directories..."
-        Remove-Item -Recurse -Force yaml, mrs -ErrorAction SilentlyContinue
-
-        # 创建本次运行的输出目录
         mkdir yaml, mrs
 
-        # 校验规则源文件是否存在
         if (-not (Test-Path -Path "input.txt")) {
           echo "input.txt not found!"
           exit 1
         }
 
-        # 遍历 input.txt 中的 URL 并执行转换
         Get-Content input.txt | ForEach-Object {
           $url = $_.Trim()
           if ($url) {
@@ -70,38 +37,24 @@ jobs:
             $mrsFile = "$prefix.mrs"
             
             echo "Processing URL: $url"
-            
-            # 下载原始规则文件
             curl -L -o $yamlFile $url
             
-            # 使用 Mihomo 工具进行格式转换
-            .\mihomo.exe convert-ruleset domain yaml $yamlFile $mrsFile
+            echo "Converting $yamlFile to $mrsFile"
+            ./mihomo.exe convert-ruleset domain yaml $yamlFile $mrsFile
             
-            # 将生成的产物文件归档到对应目录
-            Move-Item -Path $yamlFile -Destination "yaml\"
-            Move-Item -Path $mrsFile -Destination "mrs\"
-            
-            echo "-> Done for $prefix"
-            echo "---------------------"
+            Move-Item -Path $yamlFile -Destination "yaml/"
+            Move-Item -Path $mrsFile -Destination "mrs/"
           }
         }
-        
-        # 配置 Git 提交者信息
-        git config user.name "github-actions[bot]"
-        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-        git config core.autocrlf false
-        
-        # 检查工作目录是否有文件变动
-        if (-not (git status --porcelain)) {
-          echo "No changes detected. Exiting."
-          exit 0
-        }
-        
-        # 将所有变动添加到暂存区
-        git add yaml mrs
-        
-        # 创建一个新的 commit
-        git commit -m "Update rules from input.txt and convert to MRS"
-        
-        # 将本地 commit 推送到远程目标分支
-        git push
+
+    - name: Commit files to rules-output branch
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        commit_message: "chore: Update rule files"
+        branch: rules-output
+        file_pattern: yaml mrs
+        repository: .
+        commit_user_name: github-actions[bot]
+        commit_user_email: 41898282+github-actions[bot]@users.noreply.github.com
+        # 该选项确保目标分支的内容与生成文件同步，并创建新 commit
+        push_options: --force
