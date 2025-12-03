@@ -40,36 +40,34 @@ jobs:
           }
         }
 
-    # 💡 最终、最可靠的方案：使用 Git Stash
+    # 最终方案：精确添加指定目录，并使用 Stash 安全切换分支
     - name: Commit and Push to rules-output branch
       run: |
         # 1. 配置 Git 用户
         git config user.name "github-actions[bot]"
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
         
-        # 2. 添加所有新生成的文件
-        git add .
+        # 2. 核心改动：只添加 'yaml' 和 'mrs' 目录
+        #    使用 -f (force) 参数可以无视 .gitignore 文件，确保它们一定被添加
+        git add yaml mrs -f
         
-        # 3. 检查是否有文件变化，如果没有，就跳到强制空提交
-        #    如果git status --porcelain返回空，说明工作区是干净的，但我们仍要提交
-        if (-not (git status --porcelain)) {
-          echo "No file content changes detected. Proceeding with an empty commit."
-        }
+        # 3. 将这些改动（包括新文件）暂存起来，让工作区变干净
+        git stash push --include-untracked
         
-        # 4. 切换到目标分支
-        #    - 首先确保本地存在该分支的最新远程引用
-        git fetch origin rules-output
-        #    - 切换分支，如果本地不存在则基于远程分支创建
+        # 4. 安全地切换到目标分支
+        #    如果本地没有，会基于远程 origin/rules-output 创建
         git checkout rules-output
-
-        # 5. 添加所有文件（即使没有变化也要执行，以防万一）
-        git add .
         
-        # 6. 强制提交，无论内容是否变化
+        # 5. 在新分支上，恢复刚才暂存的内容
+        git stash pop
+        
+        # 6. 再次添加，确保恢复后的文件进入暂存区
+        git add yaml mrs -f
+        
+        # 7. 强制创建 commit，无论内容是否真有变化
         $timestamp = (Get-Date).ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss 'UTC'")
         git commit --allow-empty -m "chore: Scheduled rules update ($timestamp)"
         
-        # 7. 推送到远程
+        # 8. 推送到远程
         git push origin rules-output
       shell: pwsh
-
