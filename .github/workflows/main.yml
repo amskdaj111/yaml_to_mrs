@@ -1,9 +1,9 @@
 name: Convert Clash Rules to MRS
 
 on:
-  workflow_dispatch:    # 手动触发
+  workflow_dispatch:    # 允许手动触发工作流
   schedule:
-    # UTC 时间 19:00 = 北京时间 03:00
+    # 定义定时任务: 每日 19:00 UTC (北京时间次日 03:00) 运行
     - cron: '0 19 * * *'
 
 jobs:
@@ -14,52 +14,59 @@ jobs:
       contents: write
 
     steps:
-    # 1️⃣ 获取仓库代码 (包括 input.txt)
-    - name: Checkout repository
-      uses: actions/checkout@v3
+    # 步骤 1: 检出用于存放产物的目标分支
+    - name: Checkout target branch
+      uses: actions/checkout@v4
+      with:
+        # 指定工作分支为 'rules-output'
+        ref: 'rules-output' 
+        # 拉取所有提交历史，以便后续步骤能从其他分支获取文件
+        fetch-depth: 0 
 
-    # 2️⃣ 下载 Mihomo 内核 (不变)
+    # 步骤 2: 从主分支获取最新的规则源列表
+    - name: Get input.txt from main branch
+      run: git show main:input.txt > input.txt
+      # 注: 如果你的主分支名为 master, 请将 'main' 修改为 'master'
+
+    # 步骤 3: 下载规则转换工具 Mihomo
     - name: Download Mihomo
-      run: |
-        curl -L -o mihomo.exe https://github.com/amskdaj111/rules/releases/download/mihomo/mihomo.exe
+      run: curl -L -o mihomo.exe https://github.com/amskdaj111/rules/releases/download/mihomo/mihomo.exe
 
-    # 3️⃣-5️⃣ (合并) 下载、转换、整理并提交
+    # 步骤 4: 执行规则转换、提交并推送到仓库
     - name: Process rules, commit and push
       run: |
-        # 创建输出目录
+        # 为保证幂等性，在处理前清理旧的输出目录，防止历史文件残留
+        echo "Cleaning up old rule directories..."
+        Remove-Item -Recurse -Force yaml, mrs -ErrorAction SilentlyContinue
+
+        # 创建本次运行的输出目录
         mkdir yaml, mrs
 
-        # 检查 input.txt 是否存在
+        # 校验规则源文件是否存在
         if (-not (Test-Path -Path "input.txt")) {
           echo "input.txt not found!"
           exit 1
         }
 
-        # 读取 input.txt 并逐行处理
+        # 遍历 input.txt 中的 URL 并执行转换
         Get-Content input.txt | ForEach-Object {
-          $url = $_
+          $url = $_.Trim()
           if ($url) {
-            # 从 URL 中提取最后的文件名 (例如 proxy.txt)
             $baseNameWithExt = $url.Split('/')[-1]
-            # 去掉扩展名，得到前缀 (例如 proxy)
             $prefix = $baseNameWithExt.Split('.')[0]
             
-            # 定义新的文件名
             $yamlFile = "$prefix.yaml"
             $mrsFile = "$prefix.mrs"
             
             echo "Processing URL: $url"
-            echo "-> Downloading to $yamlFile"
             
-            # 下载文件
+            # 下载原始规则文件
             curl -L -o $yamlFile $url
             
-            echo "-> Converting $yamlFile to $mrsFile"
-            
-            # 转换文件
+            # 使用 Mihomo 工具进行格式转换
             .\mihomo.exe convert-ruleset domain yaml $yamlFile $mrsFile
             
-            # 移动文件到对应目录
+            # 将生成的产物文件归档到对应目录
             Move-Item -Path $yamlFile -Destination "yaml\"
             Move-Item -Path $mrsFile -Destination "mrs\"
             
@@ -68,17 +75,22 @@ jobs:
           }
         }
         
-        # 配置 Git
+        # 配置 Git 提交者信息
         git config user.name "github-actions[bot]"
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
         git config core.autocrlf false
         
-        # 添加所有新生成的文件
+        # 检查工作目录是否有文件变动
+        if (-not (git status --porcelain)) {
+          echo "No changes detected. Exiting."
+          exit 0
+        }
+        
+        # 将所有变动添加到暂存区
         git add yaml mrs
         
-        # 提交更改 (如果没有任何更改，则不报错并继续)
-        git commit -m "Update rules from input.txt and convert to MRS" || echo "No changes to commit"
+        # 创建一个新的 commit
+        git commit -m "Update rules from input.txt and convert to MRS"
         
-        # ⬅️ 关键修改在这里：添加 --force 参数
-        # 推送到指定分支，并强制覆盖
-        git push --force https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/amskdaj111/yaml_to_mrs.git HEAD:rules-output
+        # 将本地 commit 推送到远程目标分支
+        git push
