@@ -20,16 +20,12 @@ jobs:
 
     - name: Process rule files
       run: |
-        # 确保每次运行都是干净的
         Remove-Item -Recurse -Force yaml, mrs -ErrorAction SilentlyContinue
         mkdir yaml, mrs
-
         if (-not (Test-Path -Path "input.txt")) {
           echo "input.txt not found!"
           exit 1
         }
-        
-        # 文件处理逻辑 (保持不变)
         Get-Content input.txt | ForEach-Object {
           $url = $_.Trim()
           if ($url) {
@@ -44,34 +40,36 @@ jobs:
           }
         }
 
-    # 💡 最终方案：强制提交，无论内容是否变化
-    - name: Force Commit and Push to rules-output branch
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # 💡 最终、最可靠的方案：使用 Git Stash
+    - name: Commit and Push to rules-output branch
       run: |
-        # 1. 配置 Git 用户信息
-        git config --global user.name "github-actions[bot]"
-        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-        # 2. 将 'rules-output' 分支克隆到临时目录
-        $cloneDir = "rules-output-temp"
-        git clone --branch rules-output --single-branch https://x-access-token:${{ env.GITHUB_TOKEN }}@github.com/${{ github.repository }} $cloneDir
-
-        # 3. 清理旧文件，移动新文件
-        Remove-Item -Path (Join-Path $cloneDir "*") -Recurse -Force -ErrorAction SilentlyContinue
-        Move-Item -Path "yaml" -Destination $cloneDir
-        Move-Item -Path "mrs" -Destination $cloneDir
+        # 1. 配置 Git 用户
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
         
-        # 4. 进入临时目录
-        cd $cloneDir
-        
-        # 5. 添加所有文件到暂存区
+        # 2. 添加所有新生成的文件
         git add .
         
-        # 6. 核心改动：使用 --allow-empty 强制创建 commit，并加入时间戳保证消息唯一
+        # 3. 检查是否有文件变化，如果没有，就跳到强制空提交
+        #    如果git status --porcelain返回空，说明工作区是干净的，但我们仍要提交
+        if (-not (git status --porcelain)) {
+          echo "No file content changes detected. Proceeding with an empty commit."
+        }
+        
+        # 4. 切换到目标分支
+        #    - 首先确保本地存在该分支的最新远程引用
+        git fetch origin rules-output
+        #    - 切换分支，如果本地不存在则基于远程分支创建
+        git checkout rules-output
+
+        # 5. 添加所有文件（即使没有变化也要执行，以防万一）
+        git add .
+        
+        # 6. 强制提交，无论内容是否变化
         $timestamp = (Get-Date).ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss 'UTC'")
         git commit --allow-empty -m "chore: Scheduled rules update ($timestamp)"
         
-        # 7. 推送到远程分支
-        git push
+        # 7. 推送到远程
+        git push origin rules-output
       shell: pwsh
+
