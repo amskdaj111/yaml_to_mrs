@@ -1,27 +1,31 @@
 name: Convert Clash Rules to MRS
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:    # 手动触发
   schedule:
+    # UTC 时间 19:00 = 北京时间 03:00
     - cron: '0 19 * * *'
 
 jobs:
   convert:
     runs-on: windows-latest
+
     permissions:
       contents: write
 
     steps:
+    # 1️⃣ 获取仓库代码
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v3
 
-    - name: Download Mihomo converter
-      run: curl -L -o mihomo.exe https://github.com/amskdaj111/rules/releases/download/mihomo/mihomo.exe
-
-    - name: Process rule files
+    # 2️⃣ 下载 Mihomo 内核
+    - name: Download Mihomo
       run: |
-        # 为确保每次运行都是干净的，先删除旧目录
-        Remove-Item -Recurse -Force yaml, mrs -ErrorAction SilentlyContinue
+        curl -L -o mihomo.exe https://github.com/amskdaj111/rules/releases/download/mihomo/mihomo.exe
+
+    # 3️⃣ 处理、提交、推送
+    - name: Process rules, commit and push
+      run: |
         mkdir yaml, mrs
 
         if (-not (Test-Path -Path "input.txt")) {
@@ -30,36 +34,31 @@ jobs:
         }
 
         Get-Content input.txt | ForEach-Object {
-          $url = $_.Trim()
+          $url = $_
           if ($url) {
             $baseNameWithExt = $url.Split('/')[-1]
             $prefix = $baseNameWithExt.Split('.')[0]
-            
+
             $yamlFile = "$prefix.yaml"
             $mrsFile = "$prefix.mrs"
-            
+
             echo "Processing URL: $url"
             curl -L -o $yamlFile $url
-            
-            echo "Converting $yamlFile to $mrsFile"
-            ./mihomo.exe convert-ruleset domain yaml $yamlFile $mrsFile
-            
-            Move-Item -Path $yamlFile -Destination "yaml/"
-            Move-Item -Path $mrsFile -Destination "mrs/"
+
+            .\mihomo.exe convert-ruleset domain yaml $yamlFile $mrsFile
+
+            Move-Item -Path $yamlFile -Destination "yaml\"
+            Move-Item -Path $mrsFile -Destination "mrs\"
           }
         }
 
-    # 💡 关键修正: 在提交前，将生成的文件添加到暂存区
-    - name: Stage generated files
-      run: git add yaml mrs
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config core.autocrlf false
 
-    - name: Commit files to rules-output branch
-      uses: stefanzweifel/git-auto-commit-action@v5
-      with:
-        commit_message: "chore: Update rule files"
-        branch: rules-output
-        # 注意：因为上一步已经 add，这里的 file_pattern 变得不那么关键，但保留也无妨
-        file_pattern: yaml mrs
-        repository: .
-        commit_user_name: github-actions[bot]
-        commit_user_email: 41898282+github-actions[bot]@users.noreply.github.com
+        git add yaml mrs
+
+        git commit -m "Update rules from input.txt and convert to MRS" || echo "No changes to commit"
+
+        # ⬅️ 已去除 --force，使用正常 push 保留历史
+        git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/amskdaj111/yaml_to_mrs.git HEAD:rules-output
