@@ -220,9 +220,10 @@ rule-providers:
     interval: 86400
   ai:
     type: http
-    behavior: classical
-    url: "https://gcore.jsdelivr.net/gh/amskdaj111/rules/AI.yaml"
-    path: ./rule_providers/ai.yaml
+    behavior: domain
+    format: mrs
+    url: "https://gcore.jsdelivr.net/gh/DustinWin/ruleset_geodata@refs/heads/mihomo-ruleset/ai.mrs"
+    path: ./rule_providers/ai.mrs
     interval: 86400
   sogouinput:
     type: http
@@ -240,9 +241,10 @@ rule-providers:
     interval: 86400
   bilibili:
     type: http
-    behavior: classical
-    url: "https://gcore.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Providers/Ruleset/Bilibili.yaml"
-    path: ./rule_providers/bilibili.yaml
+    behavior: domain
+    format: mrs
+    url: "https://gcore.jsdelivr.net/gh/DustinWin/ruleset_geodata@refs/heads/mihomo-ruleset/bilibili.mrs"
+    path: ./rule_providers/bilibili.mrs
     interval: 86400
 
 rules:
