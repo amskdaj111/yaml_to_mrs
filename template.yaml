@@ -42,7 +42,7 @@ proxy-providers:
 
 proxy-groups:
   - name: 泛用代理
-    icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Proxy.png
+    icon: https://gcore.jsdelivr.net/gh/amskdaj111/Qure@master/IconSet/Color/Proxy.png
     type: select
     proxies:
       - 香港节点
@@ -54,7 +54,7 @@ proxy-groups:
       - DIRECT
 
   - name: 电报消息
-    icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Telegram.png
+    icon: https://gcore.jsdelivr.net/gh/amskdaj111/Qure@master/IconSet/Color/Telegram.png
     type: select
     proxies:
       - 狮城节点
@@ -66,14 +66,14 @@ proxy-groups:
       - DIRECT
 
   - name: AI平台
-    icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/ChatGPT.png
+    icon: https://gcore.jsdelivr.net/gh/amskdaj111/Qure@master/IconSet/Color/ChatGPT.png
     type: select
     use:
       - airport
     filter: "(新加坡|坡|狮城|SG|Singapore|美|US|GPT|Gemini)"
 
   - name: 油管视频
-    icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/YouTube.png
+    icon: https://gcore.jsdelivr.net/gh/amskdaj111/Qure@master/IconSet/Color/YouTube.png
     type: select
     proxies:
       - 美国节点
@@ -85,7 +85,7 @@ proxy-groups:
       - DIRECT
 
   - name: 哔哩哔哩
-    icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/bilibili.png
+    icon: https://gcore.jsdelivr.net/gh/amskdaj111/Qure@master/IconSet/Color/bilibili.png
     type: select
     proxies:
       - DIRECT
@@ -93,7 +93,7 @@ proxy-groups:
       - 台湾节点
 
   - name: 全球学术
-    icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Scholar.png
+    icon: https://gcore.jsdelivr.net/gh/amskdaj111/Qure@master/IconSet/Color/Scholar.png
     type: select
     proxies:
       - DIRECT
@@ -105,14 +105,14 @@ proxy-groups:
       - 其他节点
 
   - name: 广告拦截
-    icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/AdBlack.png
+    icon: https://gcore.jsdelivr.net/gh/amskdaj111/Qure@master/IconSet/Color/AdBlack.png
     type: select
     proxies:
       - REJECT
       - DIRECT
 
   - name: 漏网之鱼
-    icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Final.png
+    icon: https://gcore.jsdelivr.net/gh/amskdaj111/Qure@master/IconSet/Color/Final.png
     type: select
     proxies:
       - 香港节点
@@ -125,7 +125,7 @@ proxy-groups:
 
 
   - name: 香港节点
-    icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Hong_Kong.png
+    icon: https://gcore.jsdelivr.net/gh/amskdaj111/Qure@master/IconSet/Color/Hong_Kong.png
     type: fallback
     use:
       - airport
@@ -133,14 +133,14 @@ proxy-groups:
     url: https://cp.cloudflare.com/generate_204
 
   - name: 日本节点
-    icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Japan.png
+    icon: https://gcore.jsdelivr.net/gh/amskdaj111/Qure@master/IconSet/Color/Japan.png
     type: select
     use:
       - airport
     filter: "(日本|川日|东京|大阪|泉日|埼玉|沪日|深日|JP|Japan)"
 
   - name: 美国节点
-    icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/United_States.png
+    icon: https://gcore.jsdelivr.net/gh/amskdaj111/Qure@master/IconSet/Color/United_States.png
     type: fallback
     use:
       - airport
@@ -148,14 +148,14 @@ proxy-groups:
     url: https://cp.cloudflare.com/generate_204
 
   - name: 台湾节点
-    icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/China.png
+    icon: https://gcore.jsdelivr.net/gh/amskdaj111/Qure@master/IconSet/Color/China.png
     type: select
     use:
       - airport
     filter: "(台|新北|彰化|TW|Taiwan)"
 
   - name: 狮城节点
-    icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Singapore.png
+    icon: https://gcore.jsdelivr.net/gh/amskdaj111/Qure@master/IconSet/Color/Singapore.png
     type: fallback
     use:
       - airport
@@ -163,7 +163,7 @@ proxy-groups:
     url: https://cp.cloudflare.com/generate_204
 
   - name: 其他节点
-    icon: https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Area.png
+    icon: https://gcore.jsdelivr.net/gh/amskdaj111/Qure@master/IconSet/Color/Area.png
     type: select
     use:
      - airport
