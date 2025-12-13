@@ -1,0 +1,7 @@
+https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Clash.yaml
+https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/proxy.txt
+https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/direct.txt
+https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/private.txt
+https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/google.txt
+https://raw.githubusercontent.com/amskdaj111/rules/refs/heads/main/ntp.yaml
+https://raw.githubusercontent.com/amskdaj111/rules/refs/heads/main/AI.yaml

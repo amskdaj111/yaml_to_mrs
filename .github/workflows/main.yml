@@ -1,0 +1,71 @@
+name: Convert Clash Rules to MRS
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 19 * * *'
+
+jobs:
+  convert:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Download Mihomo converter
+      run: curl -L -o mihomo.exe https://github.com/amskdaj111/rules/releases/download/mihomo/mihomo.exe
+
+    - name: Process rule files
+      run: |
+        # 省略了和之前一样的文件处理部分...
+        Remove-Item -Recurse -Force yaml, mrs -ErrorAction SilentlyContinue
+        mkdir yaml, mrs
+        if (-not (Test-Path -Path "input.txt")) {
+          echo "input.txt not found!"
+          exit 1
+        }
+        Get-Content input.txt | ForEach-Object {
+          $url = $_.Trim()
+          if ($url) {
+            $baseNameWithExt = $url.Split('/')[-1]
+            $prefix = $baseNameWithExt.Split('.')[0]
+            $yamlFile = "$prefix.yaml"
+            $mrsFile = "$prefix.mrs"
+            curl -L -o $yamlFile $url
+            ./mihomo.exe convert-ruleset domain yaml $yamlFile $mrsFile
+            Move-Item -Path $yamlFile -Destination "yaml/"
+            Move-Item -Path $mrsFile -Destination "mrs/"
+          }
+        }
+
+    - name: Force push to rules-output branch
+      run: |
+        # 1. 配置 Git 用户和行为
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config --global core.autocrlf false
+        
+        # 2. 切换到一个全新的、无历史记录的孤儿分支
+        git checkout --orphan temp-branch
+        
+        # 3. 清理工作区，除了我们需要的 yaml 和 mrs
+        #    (git add 会把它们加回来)
+        git rm -rf .
+        
+        # 4. 强制添加 yaml 和 mrs 目录
+        git add yaml mrs -f
+        
+        # 5. 创建一个 commit
+        $timestamp = (Get-Date).ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss 'UTC'")
+        git commit -m "chore: Scheduled rules update ($timestamp)"
+        
+        # 6. 将当前分支重命名为目标分支名
+        git branch -M temp-branch rules-output
+        
+        # 7. 强制推送到远程的 rules-output 分支
+        #    -f 确保了无论远程分支是否存在或有何不同，都会被本次提交覆盖
+        git push -f origin rules-output
+      shell: pwsh
